@@ -1,15 +1,17 @@
 import { fileURLToPath, URL } from 'node:url'
 
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
+import type { UserConfig as VitestUserConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+const config: UserConfig & { test: VitestUserConfig['test'] } = {
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'generateSW',
+      minify: false,
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
         name: 'Chask',
@@ -33,10 +35,15 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Terser currently crashes under Node 22 when workbox tries to minify the
+        // generated service worker. For now we keep the worker unminified so the
+        // production build succeeds. Re-enable production mode once the
+        // upstream bug is resolved.
+        mode: 'development',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.origin === self.location.origin,
+            urlPattern: ({ sameOrigin }) => sameOrigin,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'chask-content',
@@ -46,6 +53,7 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
+        suppressWarnings: true,
       },
     }),
   ],
@@ -68,4 +76,6 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
     },
   },
-})
+}
+
+export default defineConfig(config)

@@ -8,13 +8,26 @@ interface ComposerProps {
   onSubmit: (value: string) => void
   placeholder?: string
   composerRef: React.RefObject<HTMLTextAreaElement | null>
+  disabled?: boolean
 }
 
-export function Composer({ onSubmit, placeholder = 'Type a task and press Enterâ€¦', composerRef }: ComposerProps) {
+export function Composer({
+  onSubmit,
+  placeholder = 'Type a task and press Enterâ€¦',
+  composerRef,
+  disabled = false,
+}: ComposerProps) {
   const [hasValue, setHasValue] = React.useState(false)
   const maxRows = 6
 
+  React.useEffect(() => {
+    if (disabled) {
+      setHasValue(false)
+    }
+  }, [disabled])
+
   const handleSubmit = React.useCallback(() => {
+    if (disabled) return
     const textarea = composerRef.current
     if (!textarea) return
     const trimmed = textarea.value.trim()
@@ -24,9 +37,10 @@ export function Composer({ onSubmit, placeholder = 'Type a task and press Enterâ
     textarea.style.height = ''
     setHasValue(false)
     textarea.focus()
-  }, [composerRef, onSubmit])
+  }, [composerRef, disabled, onSubmit])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (disabled) return
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       handleSubmit()
@@ -34,6 +48,7 @@ export function Composer({ onSubmit, placeholder = 'Type a task and press Enterâ
   }
 
   const handleInput = (event: React.FormEvent<HTMLTextAreaElement>) => {
+    if (disabled) return
     const textarea = event.currentTarget
     setHasValue(textarea.value.trim().length > 0)
     autoResize(textarea)
@@ -72,6 +87,7 @@ export function Composer({ onSubmit, placeholder = 'Type a task and press Enterâ
         defaultValue=""
         onInput={handleInput}
         onKeyDown={handleKeyDown}
+        disabled={disabled}
         aria-label="Task title"
         placeholder={placeholder}
         className={cn(
@@ -81,7 +97,7 @@ export function Composer({ onSubmit, placeholder = 'Type a task and press Enterâ
       />
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Enter to submit Â· Shift+Enter for newline</span>
-        <Button type="submit" size="sm" disabled={!hasValue} aria-label="Add task">
+        <Button type="submit" size="sm" disabled={disabled || !hasValue} aria-label="Add task">
           <Send className="mr-2 h-4 w-4" />
           Send
         </Button>

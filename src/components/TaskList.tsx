@@ -6,18 +6,22 @@ import type { Task } from '@/lib/db'
 
 interface TaskListProps {
   tasks: Task[]
+  activeTaskId?: string | null
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onUpdate: (id: string, changes: Partial<Task>) => void
+  onFocusTask?: (id: string) => void
   pendingScroll: boolean
   setPendingScroll: (next: boolean) => void
 }
 
 export function TaskList({
   tasks,
+  activeTaskId,
   onToggle,
   onDelete,
   onUpdate,
+  onFocusTask,
   pendingScroll,
   setPendingScroll,
 }: TaskListProps) {
@@ -72,6 +76,8 @@ export function TaskList({
           onToggle={onToggle}
           onDelete={onDelete}
           onUpdate={onUpdate}
+          isActive={task.id === activeTaskId}
+          onFocusTask={onFocusTask}
         />
       ))}
       <div ref={anchorRef} />

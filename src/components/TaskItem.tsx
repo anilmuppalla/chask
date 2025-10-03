@@ -13,13 +13,16 @@ interface TaskItemProps {
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onUpdate: (id: string, changes: Partial<Task>) => void
+  isActive?: boolean
+  onFocusTask?: (id: string) => void
 }
 
-export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onUpdate, isActive = false, onFocusTask }: TaskItemProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [titleDraft, setTitleDraft] = React.useState(task.title)
   const [notesDraft, setNotesDraft] = React.useState(task.notes ?? '')
   const titleInputRef = React.useRef<HTMLInputElement | null>(null)
+  const cardRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
     setTitleDraft(task.title)
@@ -65,6 +68,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
 
   const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!canStartEditing(event.target)) return
+    onFocusTask?.(task.id)
     setIsEditing(true)
   }
 
@@ -72,6 +76,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
       if (!canStartEditing(event.target)) return
+      onFocusTask?.(task.id)
       setIsEditing(true)
     }
     if (event.key === 'Escape' && isEditing) {
@@ -79,9 +84,15 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
     }
   }
 
+  React.useEffect(() => {
+    if (!isActive) return
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [isActive])
+
   return (
     <div role="listitem" className="space-y-3">
       <div
+        ref={cardRef}
         role="button"
         tabIndex={0}
         onClick={handleCardClick}
@@ -90,6 +101,7 @@ export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
           'rounded-2xl border border-transparent bg-card/85 p-4 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           task.completed ? 'opacity-80' : 'opacity-100',
           isEditing ? 'border-primary/60 shadow-md' : 'border-border hover:border-primary/40',
+          isActive ? 'ring-2 ring-primary/60 ring-offset-2 ring-offset-background' : null,
         )}
       >
         <div className="flex items-start gap-3">

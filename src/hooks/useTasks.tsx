@@ -135,8 +135,9 @@ export function useTasks() {
 
   React.useEffect(() => {
     if (!adapter) return
+    const currentAdapter = adapter
     const unsubscribe = subscribeToTasks(async () => {
-      const tasks = await adapter.all()
+      const tasks = await currentAdapter.all()
       setState((prev) => ({
         ...prev,
         tasks,
@@ -153,9 +154,10 @@ export function useTasks() {
   // Reload when adapter changes (after async init).
   React.useEffect(() => {
     if (!adapter) return
+    const currentAdapter = adapter
     let cancelled = false
     async function hydrate() {
-      const tasks = await adapter.all()
+      const tasks = await currentAdapter.all()
       if (cancelled) return
       setState((prev) => ({
         ...prev,
