@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { render, cleanup, screen } from '@testing-library/react'
 import { axe } from 'jest-axe'
-import * as React from 'react'
 
 import { Home } from '@/pages/Home'
 import { ThemeProvider } from '@/components/theme-provider'

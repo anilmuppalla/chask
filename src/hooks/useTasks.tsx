@@ -23,7 +23,6 @@ interface UseTasksState {
   storageBackend: StorageBackend
   storageWarning: boolean
   offline: boolean
-  activeTaskId: string | null
   loading: boolean
   hasCompletedTasks: boolean
   areAllCompleted: boolean
@@ -33,8 +32,10 @@ const DEFAULT_BACKEND = (import.meta.env.VITE_STORAGE_BACKEND as StorageBackend 
 
 type AdapterFactory = () => Promise<StorageAdapter>
 
-async function initializeAdapter(preferred: StorageBackend): Promise<{ adapter: StorageAdapter; backend: StorageBackend; warning: boolean }> {
-  const fallbacks: Array<[StorageBackend, AdapterFactory, boolean]> = [
+async function initializeAdapter(
+  preferred: StorageBackend,
+): Promise<{ adapter: StorageAdapter; backend: StorageBackend; warning: boolean }> {
+  const fallbacks: [StorageBackend, AdapterFactory, boolean][] = [
     ['indexeddb', createIndexedDbAdapter, false],
     ['localstorage', createLocalStorageAdapter, true],
   ]
@@ -90,7 +91,6 @@ export function useTasks() {
     storageBackend: 'indexeddb',
     storageWarning: false,
     offline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
-    activeTaskId: null,
     loading: true,
     hasCompletedTasks: false,
     areAllCompleted: false,
@@ -253,6 +253,16 @@ export function useTasks() {
     [adapter, state.tasks, syncState],
   )
 
+  const undoDelete = React.useCallback(async () => {
+    if (!adapter) return
+    if (!lastDeletedTask.current) return
+    const restored: Task = { ...lastDeletedTask.current, updatedAt: Date.now() }
+    const nextTasks = [...state.tasks, restored].sort((a, b) => a.createdAt - b.createdAt)
+    syncState(nextTasks)
+    await adapter.create(restored)
+    lastDeletedTask.current = null
+  }, [adapter, state.tasks, syncState])
+
   const removeTask = React.useCallback(
     async (id: string) => {
       if (!adapter) return
@@ -274,18 +284,8 @@ export function useTasks() {
         ),
       })
     },
-    [adapter, state.tasks, syncState],
+    [adapter, state.tasks, syncState, undoDelete],
   )
-
-  const undoDelete = React.useCallback(async () => {
-    if (!adapter) return
-    if (!lastDeletedTask.current) return
-    const restored: Task = { ...lastDeletedTask.current, updatedAt: Date.now() }
-    const nextTasks = [...state.tasks, restored].sort((a, b) => a.createdAt - b.createdAt)
-    syncState(nextTasks)
-    await adapter.create(restored)
-    lastDeletedTask.current = null
-  }, [adapter, state.tasks, syncState])
 
   const clearCompleted = React.useCallback(async () => {
     if (!adapter) return
@@ -320,10 +320,6 @@ export function useTasks() {
     [state.tasks, syncState],
   )
 
-  const setActiveTask = React.useCallback((taskId: string | null) => {
-    setState((prev) => ({ ...prev, activeTaskId: taskId }))
-  }, [])
-
   const value = React.useMemo(
     () => ({
       ...state,
@@ -338,7 +334,6 @@ export function useTasks() {
       toggleAll,
       setFilter,
       setSearch,
-      setActiveTask,
       setPendingScroll,
     }),
     [
@@ -354,7 +349,6 @@ export function useTasks() {
       toggleAll,
       setFilter,
       setSearch,
-      setActiveTask,
     ],
   )
 

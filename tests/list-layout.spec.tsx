@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, waitFor } from '@testing-library/react'
-import * as React from 'react'
 
 import { TaskList } from '@/components/TaskList'
 import type { Task } from '@/lib/db'

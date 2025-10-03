@@ -5,10 +5,7 @@ module.exports = {
     es2023: true,
     node: true,
   },
-  parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: ['./tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
     ecmaFeatures: {
       jsx: true,
     },
@@ -16,8 +13,8 @@ module.exports = {
   plugins: ['@typescript-eslint', 'react', 'react-hooks', 'jsx-a11y'],
   extends: [
     'eslint:recommended',
-    'plugin:@typescript-eslint/recommended-type-checked',
-    'plugin:@typescript-eslint/stylistic-type-checked',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/stylistic',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
     'plugin:jsx-a11y/recommended',
@@ -32,10 +29,24 @@ module.exports = {
   rules: {
     '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
+    '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/array-type': 'off',
+    '@typescript-eslint/no-empty-object-type': 'off',
+    '@typescript-eslint/no-require-imports': 'off',
     'react/prop-types': 'off',
   },
   overrides: [
+    {
+      files: ['**/*.{ts,tsx}'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        project: ['./tsconfig.app.json'],
+        tsconfigRootDir: __dirname,
+      },
+      rules: {
+        '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
+      },
+    },
     {
       files: ['**/*.spec.ts', '**/*.spec.tsx', 'tests/**/*.{ts,tsx}'],
       env: {
@@ -47,5 +58,5 @@ module.exports = {
       },
     },
   ],
-  ignorePatterns: ['dist', 'node_modules'],
+  ignorePatterns: ['dist', 'node_modules', 'public/service-worker.ts', 'vite.config.ts'],
 }

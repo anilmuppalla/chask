@@ -21,14 +21,11 @@ export function Home() {
     toggleTask,
     removeTask,
     updateTask,
-    activeTaskId,
-    setActiveTask,
     storageWarning,
     offline,
     composerRef,
     pendingScroll,
     setPendingScroll,
-    loading,
   } = useTasks()
 
   const showOfflineBanner = offline && filtered.length === 0
@@ -73,11 +70,9 @@ export function Home() {
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 pb-32 pt-6">
         <TaskList
           tasks={filtered}
-          activeTaskId={activeTaskId}
           onToggle={toggleTask}
           onDelete={removeTask}
           onUpdate={updateTask}
-          onFocusTask={setActiveTask}
           pendingScroll={pendingScroll}
           setPendingScroll={setPendingScroll}
         />
@@ -85,9 +80,7 @@ export function Home() {
       <div className="sticky bottom-0 z-30 bg-gradient-to-t from-background via-background/95 to-background/30 px-4 pb-4 pt-6">
         <div className="mx-auto w-full max-w-3xl safe-area-b">
           <Composer composerRef={composerRef} onSubmit={addTask} />
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Shortcuts: Cmd/Ctrl+K focus · Space toggle · E edit · Delete removes (Undo available)
-          </p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">Click a task to edit, or use Delete to remove.</p>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-export type TaskBusEvent = {
+export interface TaskBusEvent {
   type: 'tasks-changed'
 }
 

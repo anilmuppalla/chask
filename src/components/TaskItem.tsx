@@ -10,22 +10,12 @@ import type { Task } from '@/lib/db'
 
 interface TaskItemProps {
   task: Task
-  isActive: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onUpdate: (id: string, changes: Partial<Task>) => void
-  onFocus: (id: string | null) => void
-  requestScrollToBottom?: () => void
 }
 
-export function TaskItem({
-  task,
-  isActive,
-  onToggle,
-  onDelete,
-  onUpdate,
-  onFocus,
-}: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onUpdate }: TaskItemProps) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [titleDraft, setTitleDraft] = React.useState(task.title)
   const [notesDraft, setNotesDraft] = React.useState(task.notes ?? '')
@@ -65,44 +55,56 @@ export function TaskItem({
     setIsEditing(false)
   }
 
-  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (isEditing) return
-    if (event.target instanceof HTMLElement && event.target.closest('button, input, textarea')) {
-      return
+  const canStartEditing = (target: EventTarget | null) => {
+    if (isEditing) return false
+    if (target instanceof HTMLElement && target.closest('button, input, textarea')) {
+      return false
     }
+    return true
+  }
+
+  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!canStartEditing(event.target)) return
     setIsEditing(true)
   }
 
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      if (!canStartEditing(event.target)) return
+      setIsEditing(true)
+    }
+    if (event.key === 'Escape' && isEditing) {
+      handleCancel()
+    }
+  }
+
   return (
-    <div
-      role="listitem"
-      tabIndex={0}
-      onClick={handleCardClick}
-      onFocus={() => onFocus(task.id)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-          onFocus(null)
-        }
-      }}
-      className={cn(
-        'rounded-2xl border border-transparent bg-card/85 p-4 shadow-sm transition-colors',
-        task.completed ? 'opacity-80' : 'opacity-100',
-        isActive || isEditing ? 'border-primary/60 shadow-md' : 'border-border hover:border-primary/40',
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <Checkbox
-          checked={task.completed}
-          onCheckedChange={() => onToggle(task.id)}
-          aria-label={task.completed ? 'Mark task as active' : 'Mark task as completed'}
-          className="mt-1"
-        />
-        <div className="flex-1 space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            {isEditing ? (
-              <Input
-                ref={titleInputRef}
-                value={titleDraft}
+    <div role="listitem" className="space-y-3">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+        className={cn(
+          'rounded-2xl border border-transparent bg-card/85 p-4 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+          task.completed ? 'opacity-80' : 'opacity-100',
+          isEditing ? 'border-primary/60 shadow-md' : 'border-border hover:border-primary/40',
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <Checkbox
+            checked={task.completed}
+            onCheckedChange={() => onToggle(task.id)}
+            aria-label={task.completed ? 'Mark task as active' : 'Mark task as completed'}
+            className="mt-1"
+          />
+          <div className="flex-1 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              {isEditing ? (
+                <Input
+                  ref={titleInputRef}
+                  value={titleDraft}
                 onChange={(event) => setTitleDraft(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
@@ -159,7 +161,8 @@ export function TaskItem({
           ) : null}
         </div>
       </div>
-      <div className="mt-3 flex justify-end text-xs text-muted-foreground">
+    </div>
+      <div className="flex justify-end text-xs text-muted-foreground">
         <span className="uppercase tracking-wide">Created {new Date(task.createdAt).toLocaleDateString()}</span>
       </div>
     </div>
