@@ -1,0 +1,6 @@
+dist
+coverage
+node_modules
+build
+.cache
+public/icons
