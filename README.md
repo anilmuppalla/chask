@@ -67,4 +67,4 @@ npm run dev
 
 ## License
 
-MIT
+MIT © 2025
